@@ -5,24 +5,45 @@ import java.util.Map;
 import java.util.UUID;
 
 public class ShieldCooldown {
-	// TODO Set all field objects to values in a config file.
+
 	ShieldListener shieldRestore;
+	
+	static eShields plugin;
+	public static long DEFAULT_COOLDOWN;
+	public ShieldCooldown(eShields instance) {
+		plugin = instance;
+		DEFAULT_COOLDOWN = configSectionGetLong(eShields.DEFAULT_COOLDOWN);
+	}
+
+	private final Map<UUID, Long> cooldowns = new HashMap<>();
 
 	
-    private final Map<UUID, Long> cooldowns = new HashMap<>();
-    
-    public static final long DEFAULT_COOLDOWN = 5;
 
-    public void setCooldown(UUID p, long time){
-        if(time < 1) {
-            cooldowns.remove(p);
-                 
-        } else {
-            cooldowns.put(p, (long) time);
-        }
-    }
+	public void setCooldown(UUID p, long time) {
+		if (time < 1) {
+			cooldowns.remove(p);
 
-    public long getCooldown(UUID p){
-        return cooldowns.getOrDefault(p, (long) 0);
-    }
+		} else {
+			cooldowns.put(p, (long) time);
+		}
+	}
+
+	public long getCooldown(UUID p) {
+		return cooldowns.getOrDefault(p, (long) 0);
+	}
+
+	/*
+	 * Returns configuration section name for objects.
+	 */
+	private static String configSectionName() {
+		return plugin.getCooldownSectionName();
+	}
+
+	/*
+	 * Returns config double value from shieldListenerSection specified in
+	 * parameter.
+	 */
+	private static long configSectionGetLong(Object[] configName) {
+		return plugin.getConfig().getConfigurationSection(configSectionName()).getLong((String) configName[0]);
+	}
 }

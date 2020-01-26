@@ -5,6 +5,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -16,30 +17,46 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class ShieldListener implements Listener {
+
 	eShields plugin;
-
-	public ShieldListener(eShields instance) {
-		plugin = instance;
-	}
-
-	// TODO Comments to describe methods/objects.
-	// TODO Fix very rare bug where damage doesn't trigger health regen for some reason. 
-	// TODO Set all field objects to values in a config file.
-	// TODO Give a way to spectate battles and see shield status of any player.
-	private final ShieldCooldown shieldCooldown = new ShieldCooldown(); //Constructs shieldCooldown for the cooldown between shield damage and restoration.
-	private final BarColor fracturedShieldColor = BarColor.RED; //Color when shield health hits 0.
-	private final BarColor healthyShieldColor = BarColor.BLUE; //Color when shield begins to regenerate.
-	private final BarStyle shieldStyle = BarStyle.SOLID; //Style for shield.
-	private final double shieldRegenPerTick = 0.01; //Percentage Rate of shield/BossBar regeneration per tick out of 1. 0.01 restores 20% of shield per second.
-	private final String shieldName = "Shield Status"; //Name above BossBar. Visible to player
-	private double shieldHealth = 20; //Gives the shield a value of 20 health. This is 10 hearts.
+	final ShieldCooldown shieldCooldown;
+	ShieldSounds shieldSounds;
+	private final BarColor fracturedShieldColor; // Color when shield health hits 0.
+	private final BarColor healthyShieldColor; // Color when shield begins to regenerate.
+	private final BarStyle shieldStyle; // Style for shield.
+	private final double shieldRegenPerTick; //Regenerate shield %/tick.
+	private final String shieldName; // Name above BossBar that player sees.
+	private double shieldHealth; // Gives the shield a value of 1/2 heart per health.
+	@SuppressWarnings("rawtypes")
+	HashMap<UUID, HashMap> data; //Hashmap holding each player's BossBar.
 	
 	@SuppressWarnings("rawtypes")
-	HashMap<UUID, HashMap> data = new HashMap<UUID, HashMap>(); //Hashmap holding each player's BossBar. TODO: More values for player-exclusive options
-	
+	public ShieldListener(eShields instance) {
+		plugin = instance;
+		shieldSounds = new ShieldSounds(plugin);
+		fracturedShieldColor = configSectionGetBarColor(plugin.fracturedShieldColor);
+		healthyShieldColor = configSectionGetBarColor(plugin.healthyShieldColor);
+		shieldCooldown = new ShieldCooldown(plugin);
+		shieldStyle = configSectionGetBarStyle(plugin.shieldStyle);
+		shieldRegenPerTick = (configSectionGetDouble(plugin.shieldRegenPerTick) / 2000);
+		shieldName = configSectionGetString(plugin.shieldName);
+		shieldHealth = configSectionGetDouble(plugin.shieldHealth);
+		data = new HashMap<UUID, HashMap>();
+	}
+
+	// TODO Fix very rare bug where damage doesn't trigger health regen for some
+	// reason.
+	// TODO Set all field objects to values in a config file.
+	// TODO Give a way to spectate battles and see shield status of any player.
+	// TODO Keep functionality on reload.
+	// TODO Put long comments over line not to side.
+	// TODO Declare in outter wrapper, assign them in construcuter.
+	// TODO Brainstorm ideas for player-exclusive options.
+
+
 	/*
-	 * Defines player object and BossBar for map key and value pair. 
-	 * BossBar is what I used for the energy shield.
+	 * Defines player object and BossBar for map key and value pair. BossBar is what
+	 * I used for the energy shield.
 	 */
 	@EventHandler
 	private void onJoin(PlayerJoinEvent event) {
@@ -49,6 +66,7 @@ public class ShieldListener implements Listener {
 		initializeShield(player, playerShield);
 
 	}
+
 	/*
 	 * This method is for future configuration that I haven't added yet.
 	 */
@@ -65,59 +83,75 @@ public class ShieldListener implements Listener {
 		shield.addPlayer(player);
 		shield.setVisible(true);
 	}
+
 	/*
 	 * Defines player object and the damage we will add to the shield.
-	*/
+	 */
 	@EventHandler
 	private void playerDamaged(EntityDamageEvent event) {
 		if (event.getEntity() instanceof Player) {
-			double shieldDamage = (event.getDamage() / 100); //Divide by 100 so player takes miniscule damage. Can't set to 0.
+			double shieldDamage = (event.getDamage() / 100); // Divide by 100 so player takes miniscule damage. Can't
+																// set to 0.
 			Player player = (Player) event.getEntity();
 			shieldProcessing(player, shieldDamage, event);
 
 		}
 	}
+
 	/*
-	 * Assigns a shield regen cooldown for the player.
-	 * Checks if the shield health is greater than 0.
+	 * Assigns a shield regen cooldown for the player. Checks if the shield health
+	 * is greater than 0.
 	 */
 	private void shieldProcessing(Player player, double shieldDamage, EntityDamageEvent event) {
 		BossBar playerShield = getPlayerShield(player);
 		setShieldCooldown(player);
-		beginShieldRestoreTimer(player, playerShield); 
-		if (getShieldProgress(playerShield) > 0d) { 
+		beginShieldRestoreTimer(player, playerShield);
+		if (getShieldProgress(playerShield) > 0d) {
 			try {
-				playerShield.setProgress(playerShield.getProgress() - shieldDamage * (shieldHealth/4)); //Divide by 4 so shieldHealth works correctly.
-				event.setDamage(shieldDamage); //Sets player damage to 1% if shield is active.
+				Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_RED + "" + (getShieldProgress(playerShield) - shieldDamage * (shieldHealth / 4)));
+				setShieldProgress(playerShield, getShieldProgress(playerShield) - shieldDamage * (shieldHealth / 4)); // Divide
+																														// by
+																														// 4
+																														// so
+																														// shieldHealth
+																														// works
+																														// correctly.
+				event.setDamage(shieldDamage); // Sets player damage to 1% if shield is active.
 			} catch (Exception negativeShieldHealth) {
 				shieldFracture(player, shieldDamage, playerShield, event);
 			}
 		}
 	}
+
 	/*
 	 * Store cooldown in HashMap.
 	 */
 	private void setShieldCooldown(Player player) {
 		shieldCooldown.setCooldown(player.getUniqueId(), System.currentTimeMillis());
 	}
+
 	/*
-	 * Changes player's BossBar color.
-	 * Sets player damage to leftover damage of shield.
+	 * Changes player's BossBar color. Sets player damage to leftover damage of
+	 * shield.
 	 */
 	private void shieldFracture(Player player, double shieldDamage, BossBar playerShield, EntityDamageEvent event) {
 		playerShield.setColor(fracturedShieldColor);
-		event.setDamage(((event.getDamage() - (playerShield.getProgress() * shieldHealth))));
+		event.setDamage(((event.getDamage() - (getShieldProgress(playerShield) * shieldHealth))));
 		setShieldProgress(playerShield, 0);
 		playShieldFractureSound(player);
 	}
+
 	/*
-	 * Restore shield in DEFAULT_COOLDOWN seconds. 
+	 * Restore shield in DEFAULT_COOLDOWN seconds.
 	 */
 	private void beginShieldRestoreTimer(Player player, BossBar playerShield) {
-		Bukkit.getScheduler().runTaskLater(plugin, () -> restoreShield(player, playerShield), toTicks(io.github.lukeeff.ShieldCooldown.DEFAULT_COOLDOWN) + 1); //Add one tick or canRegen will always say false.
+		Bukkit.getScheduler().runTaskLater(plugin, () -> restoreShield(player, playerShield),
+				toTicks(io.github.lukeeff.ShieldCooldown.DEFAULT_COOLDOWN) + 1); // Add one tick or canRegen will always
+																					// say false.
 	}
+
 	/*
-	 * Checks if shield is allowed to regen or not.
+	 * Begins shield restoration if player is allowed to regen.
 	 */
 	private void restoreShield(Player player, BossBar playerShield) {
 
@@ -127,10 +161,11 @@ public class ShieldListener implements Listener {
 			beginShieldRestore(player, playerShield);
 		}
 	}
+
 	/*
-	 * Repeat task until shield is full or setShieldCooldown is called.
-	 * Task restores shield at shieldRegenPerTick per tick.
-	 * Allows for a smooth and cancelable shield regen.
+	 * Repeat task until shield is full or setShieldCooldown is called. Task
+	 * restores shield at shieldRegenPerTick per tick. Allows for a smooth and
+	 * cancelable shield regen.
 	 */
 	private void beginShieldRestore(Player player, BossBar playerShield) {
 		playerShield.setColor(healthyShieldColor);
@@ -152,7 +187,6 @@ public class ShieldListener implements Listener {
 			}
 		}.runTaskTimer(plugin, 0L, 1L);
 	}
-	
 
 	/*
 	 * Checks if cooldown has expired.
@@ -167,45 +201,89 @@ public class ShieldListener implements Listener {
 	private double getShieldProgress(BossBar playerShield) {
 		return playerShield.getProgress();
 	}
+
 	/*
 	 * Sets player's BossBar progress
 	 */
 	private void setShieldProgress(BossBar playerShield, double progress) {
 		playerShield.setProgress(progress);
 	}
+
 	/*
 	 * Plays sound for shield fracturing.
 	 */
 	private void playShieldFractureSound(Player player) {
-		ShieldSounds.shieldFracture(player);
+		shieldSounds.shieldFracture(player);
 	}
+
 	/*
 	 * Plays sound for shield regeneration.
 	 */
 	private void playShieldRegenSound(Player player) {
-		ShieldSounds.shieldRegen(player);
+		shieldSounds.shieldRegen(player);
 	}
+
 	/*
 	 * Returns player's BossBar
 	 */
 	private BossBar getPlayerShield(Player player) {
 		return (BossBar) data.get(player.getUniqueId()).get("shieldMap");
 	}
+
 	/*
 	 * Returns the time left.
 	 */
 	private long getTimeLeft(Player player) {
 		return System.currentTimeMillis() - shieldCooldown.getCooldown(player.getUniqueId());
 	}
+
 	/*
 	 * Converts seconds to ticks and returns.
 	 */
 	private long toTicks(long seconds) {
 		return seconds * 20;
 	}
-	
 
+	/*
+	 * Returns configuration section name for objects.
+	 */
+	private String configSectionName() {
+		return plugin.getShieldListenerSectionName();
+	}
 
+	/*
+	 * Returns config string value from shieldListenerSection specified in
+	 * parameter.
+	 */
+	private String configSectionGetString(Object[] configName) {
+		return plugin.getConfig().getConfigurationSection(configSectionName()).getString((String) configName[0]);
+	}
 
+	/*
+	 * Returns config double value from shieldListenerSection specified in
+	 * parameter.
+	 */
+	private double configSectionGetDouble(Object[] configName) {
+		return plugin.getConfig().getConfigurationSection(configSectionName()).getDouble((String) configName[0]);
+	}
+
+	/*
+	 * Returns config BarStyle value from shieldListenerSection specified in
+	 * parameter.
+	 */
+	private BarStyle configSectionGetBarStyle(Object[] configName) {
+		return plugin.shieldStyleMap.get(plugin.getConfig().getConfigurationSection(configSectionName()).getString((String) configName[0]).toUpperCase());
+	}
+
+	/*
+	 * Returns config BarColor value from shieldListenerSection specified in
+	 * parameter.
+	 */
+	private BarColor configSectionGetBarColor(Object[] configName) {
+		//return plugin.getConfig().getConfigurationSection(configSectionName()).getObject((String) configName[0],
+		//		BarColor.class);
+		Bukkit.getConsoleSender().sendMessage(ChatColor.LIGHT_PURPLE + plugin.getConfig().getConfigurationSection(configSectionName()).getString((String) configName[0]).toUpperCase());
+		return plugin.shieldColorMap.get(plugin.getConfig().getConfigurationSection(configSectionName()).getString((String) configName[0]).toUpperCase());
+	}
 
 }

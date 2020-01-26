@@ -1,2 +1,16 @@
-Shield_Health: 30.0
-Regeneration_Time: 40.0
+Shield Properties:
+  Shield health: 20
+  Shield name: Shield Status
+  Shield percent regeneration per second: 20
+  Shield Style: SOLID
+  Active shield color: BLUE
+  Fractured shield color: RED
+Sounds:
+  Shield regeration sound: BLOCK_BEACON_ACTIVATE
+  Shield regeneration volume: 1.0
+  Shield regeneration pitch: 0.4
+  Shield fracture sound: BLOCK_ANVIL_LAND
+  Shield fracture volume: 1.0
+  Shield fracture pitch: 0.4
+Cooldowns:
+  Cooldown before shield regenerates: 5
