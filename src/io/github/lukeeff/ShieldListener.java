@@ -9,6 +9,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
+import org.bukkit.boss.KeyedBossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,46 +19,71 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class ShieldListener implements Listener {
 
-	eShields plugin;
-	final ShieldCooldown shieldCooldown;
-	ShieldSounds shieldSounds;
-	private final BarColor fracturedShieldColor; // Color when shield health hits 0.
-	private final BarColor healthyShieldColor; // Color when shield begins to regenerate.
-	private final BarStyle shieldStyle; // Style for shield.
-	private final double shieldRegenPerTick; //Regenerate shield %/tick.
-	private final String shieldName; // Name above BossBar that player sees.
-	private double shieldHealth; // Gives the shield a value of 1/2 heart per health.
+	static eShields plugin;
+	static ShieldCooldown shieldCooldown;
+	static ShieldSounds shieldSounds;
+	//static BossBar playerShield;
+	static public BarColor fracturedShieldColor; // Color when shield health hits 0.
+	static public BarColor healthyShieldColor; // Color when shield begins to regenerate.
+	static public BarStyle shieldStyle; // Style for shield.
+	static public double shieldRegenPerTick; // Regenerate shield %/tick.
+	static public String shieldName; // Name above BossBar that player sees.
+	static public double shieldHealth; // Gives the shield a value of 1/2 heart per health.
 	@SuppressWarnings("rawtypes")
-	HashMap<UUID, HashMap> data; //Hashmap holding each player's BossBar.
-	
+	static
+	HashMap<UUID, HashMap> data; // Hashmap holding each player's BossBar.
+
 	@SuppressWarnings("rawtypes")
 	public ShieldListener(eShields instance) {
 		plugin = instance;
-		shieldSounds = new ShieldSounds(plugin);
+		setVariables();
+	}
+	
+	static void setVariables() {
+		shieldSounds = plugin.sounds;
 		fracturedShieldColor = configSectionGetBarColor(plugin.fracturedShieldColor);
 		healthyShieldColor = configSectionGetBarColor(plugin.healthyShieldColor);
-		shieldCooldown = new ShieldCooldown(plugin);
+		shieldCooldown = plugin.cooldown;
 		shieldStyle = configSectionGetBarStyle(plugin.shieldStyle);
 		shieldRegenPerTick = (configSectionGetDouble(plugin.shieldRegenPerTick) / 2000);
 		shieldName = configSectionGetString(plugin.shieldName);
 		shieldHealth = configSectionGetDouble(plugin.shieldHealth);
-		data = new HashMap<UUID, HashMap>();
+		data = plugin.data;
+	}
+	
+	static void reload() {
+		setVariables();
+		for (Player player : Bukkit.getOnlinePlayers()) {
+			UUID uuid = player.getUniqueId();
+			BossBar playerShield = (BossBar) data.get(uuid).get("playerShield");
+			updateShield(playerShield);
+		}
+		
 	}
 
+	private static void updateShield(BossBar playerShield) {
+		if(playerShield.getProgress() <= 0.01) {
+			playerShield.setColor(fracturedShieldColor);
+		} else {
+			playerShield.setColor(healthyShieldColor);
+		}
+		playerShield.setStyle(shieldStyle);
+	}
 	// TODO Fix very rare bug where damage doesn't trigger health regen for some
 	// reason.
-	// TODO Set all field objects to values in a config file.
 	// TODO Give a way to spectate battles and see shield status of any player.
 	// TODO Keep functionality on reload.
 	// TODO Put long comments over line not to side.
 	// TODO Declare in outter wrapper, assign them in construcuter.
 	// TODO Brainstorm ideas for player-exclusive options.
 
-
-	/*
+	/*	
 	 * Defines player object and BossBar for map key and value pair. BossBar is what
 	 * I used for the energy shield.
 	 */
+	
+	
+	
 	@EventHandler
 	private void onJoin(PlayerJoinEvent event) {
 		Player player = (Player) event.getPlayer();
@@ -67,12 +93,14 @@ public class ShieldListener implements Listener {
 
 	}
 
+	
+	
 	/*
 	 * This method is for future configuration that I haven't added yet.
 	 */
 	private void storeData(Player player, BossBar shield) {
 		HashMap<String, Object> contents = new HashMap<String, Object>();
-		contents.put("shieldMap", shield);
+		contents.put("playerShield", shield);
 		data.put(player.getUniqueId(), contents);
 	}
 
@@ -108,8 +136,7 @@ public class ShieldListener implements Listener {
 		beginShieldRestoreTimer(player, playerShield);
 		if (getShieldProgress(playerShield) > 0d) {
 			try {
-				Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_RED + "" + (getShieldProgress(playerShield) - shieldDamage * (shieldHealth / 4)));
-				setShieldProgress(playerShield, getShieldProgress(playerShield) - shieldDamage * (shieldHealth / 4)); // Divide
+				setShieldProgress(playerShield, getShieldProgress(playerShield) - shieldDamage * (shieldHealth / 4)); // Divide    20 5 5
 																														// by
 																														// 4
 																														// so
@@ -199,7 +226,7 @@ public class ShieldListener implements Listener {
 	 * Returns player's BossBar progress.
 	 */
 	private double getShieldProgress(BossBar playerShield) {
-		return playerShield.getProgress();
+		return playerShield.getProgress(); //Throws NPE... 
 	}
 
 	/*
@@ -247,7 +274,7 @@ public class ShieldListener implements Listener {
 	/*
 	 * Returns configuration section name for objects.
 	 */
-	private String configSectionName() {
+	private static String configSectionName() {
 		return plugin.getShieldListenerSectionName();
 	}
 
@@ -255,7 +282,7 @@ public class ShieldListener implements Listener {
 	 * Returns config string value from shieldListenerSection specified in
 	 * parameter.
 	 */
-	private String configSectionGetString(Object[] configName) {
+	private static String configSectionGetString(Object[] configName) {
 		return plugin.getConfig().getConfigurationSection(configSectionName()).getString((String) configName[0]);
 	}
 
@@ -263,7 +290,7 @@ public class ShieldListener implements Listener {
 	 * Returns config double value from shieldListenerSection specified in
 	 * parameter.
 	 */
-	private double configSectionGetDouble(Object[] configName) {
+	private static double configSectionGetDouble(Object[] configName) {
 		return plugin.getConfig().getConfigurationSection(configSectionName()).getDouble((String) configName[0]);
 	}
 
@@ -271,19 +298,22 @@ public class ShieldListener implements Listener {
 	 * Returns config BarStyle value from shieldListenerSection specified in
 	 * parameter.
 	 */
-	private BarStyle configSectionGetBarStyle(Object[] configName) {
-		return plugin.shieldStyleMap.get(plugin.getConfig().getConfigurationSection(configSectionName()).getString((String) configName[0]).toUpperCase());
+	private static BarStyle configSectionGetBarStyle(Object[] configName) {
+		return plugin.shieldStyleMap.get(plugin.getConfig().getConfigurationSection(configSectionName())
+				.getString((String) configName[0]).toUpperCase());
 	}
 
 	/*
 	 * Returns config BarColor value from shieldListenerSection specified in
 	 * parameter.
 	 */
-	private BarColor configSectionGetBarColor(Object[] configName) {
-		//return plugin.getConfig().getConfigurationSection(configSectionName()).getObject((String) configName[0],
-		//		BarColor.class);
-		Bukkit.getConsoleSender().sendMessage(ChatColor.LIGHT_PURPLE + plugin.getConfig().getConfigurationSection(configSectionName()).getString((String) configName[0]).toUpperCase());
-		return plugin.shieldColorMap.get(plugin.getConfig().getConfigurationSection(configSectionName()).getString((String) configName[0]).toUpperCase());
+	private static BarColor configSectionGetBarColor(Object[] configName) {
+		// return
+		// plugin.getConfig().getConfigurationSection(configSectionName()).getObject((String)
+		// configName[0],
+		// BarColor.class);
+		return plugin.shieldColorMap.get(plugin.getConfig().getConfigurationSection(configSectionName())
+				.getString((String) configName[0]).toUpperCase());
 	}
 
 }

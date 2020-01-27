@@ -12,9 +12,17 @@ public class ShieldCooldown {
 	public static long DEFAULT_COOLDOWN;
 	public ShieldCooldown(eShields instance) {
 		plugin = instance;
+		setVariables();
+	}
+	
+	static void setVariables() {
 		DEFAULT_COOLDOWN = configSectionGetLong(eShields.DEFAULT_COOLDOWN);
 	}
-
+	
+	static void reload() {
+		setVariables();
+	}
+	
 	private final Map<UUID, Long> cooldowns = new HashMap<>();
 
 	
