@@ -12,17 +12,17 @@ import net.md_5.bungee.api.ChatColor;
 public class CommandCategory implements CommandExecutor {
 
 	eShields plugin;
-	Tester maps;
-	private HashMap[] categories;
+	SmartConfigTester maps;
+	@SuppressWarnings("rawtypes")
 	private HashMap<String, HashMap> key;
-	public CommandCategory(eShields instance, Tester instance0) {
+	@SuppressWarnings("rawtypes")
+	public CommandCategory(eShields instance, SmartConfigTester instance0) {
 		plugin = instance;
 		maps = instance0;
-		categories = maps.typeMaps;
 		key = new HashMap<String, HashMap>();
 		key.put("soundcategory", plugin.soundMap);
-		key.put("barcolorcategory", plugin.shieldStyleMap);
-		key.put("barstylecategory", plugin.shieldColorMap);
+		key.put("barstylecategory", plugin.shieldStyleMap);
+		key.put("barcolorcategory", plugin.shieldColorMap);
 	}
 	
 	@Override

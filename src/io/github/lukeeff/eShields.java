@@ -13,7 +13,6 @@ import org.bukkit.boss.BarStyle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class eShields extends JavaPlugin {
@@ -28,7 +27,7 @@ public class eShields extends JavaPlugin {
 	FileConfiguration config;
 	File modifiedConfigFile; // Loads config file in datafolder.
 	// These are objects of the ShieldListenerClass.
-	Tester tester;
+	SmartConfigTester tester;
 	protected final Object[] shieldHealth;
 	protected final Object[] shieldName;
 	protected final Object[] shieldRegenPerTick;
@@ -57,6 +56,7 @@ public class eShields extends JavaPlugin {
 	@SuppressWarnings("rawtypes")
 	HashMap<UUID, HashMap> data;
 
+	@SuppressWarnings("rawtypes")
 	public eShields() {
 		config = this.getConfig();
 		modifiedConfigFile = new File(this.getDataFolder(), "config.yml");
@@ -84,7 +84,7 @@ public class eShields extends JavaPlugin {
 		shieldColorMapSetter();
 		soundMap = new HashMap<String, Sound>();
 		soundMapSetter();
-		tester = new Tester(this);
+		tester = new SmartConfigTester(this);
 		sounds = new ShieldSounds(this);
 		cooldown = new ShieldCooldown(this);
 		data = new HashMap<UUID, HashMap>();
@@ -212,6 +212,13 @@ public class eShields extends JavaPlugin {
 		for (BarStyle barStyles : BarStyle.values()) {
 			shieldStyleMap.put(barStyles.name(), barStyles);
 		}
+		
+		
+		
+		
+		 
+		
+		
 	}
     /*
      * Get section name in config.

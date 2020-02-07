@@ -5,11 +5,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.boss.KeyedBossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,7 +20,6 @@ public class ShieldListener implements Listener {
 	static eShields plugin;
 	static ShieldCooldown shieldCooldown;
 	static ShieldSounds shieldSounds;
-	//static BossBar playerShield;
 	static public BarColor fracturedShieldColor; // Color when shield health hits 0.
 	static public BarColor healthyShieldColor; // Color when shield begins to regenerate.
 	static public BarStyle shieldStyle; // Style for shield.
@@ -30,10 +27,8 @@ public class ShieldListener implements Listener {
 	static public String shieldName; // Name above BossBar that player sees.
 	static public double shieldHealth; // Gives the shield a value of 1/2 heart per health.
 	@SuppressWarnings("rawtypes")
-	static
-	HashMap<UUID, HashMap> data; // Hashmap holding each player's BossBar.
+	static HashMap<UUID, HashMap> data; // Hashmap holding each player's BossBar.
 
-	@SuppressWarnings("rawtypes")
 	public ShieldListener(eShields instance) {
 		plugin = instance;
 		setVariables();
@@ -99,7 +94,7 @@ public class ShieldListener implements Listener {
 	 * This method is for future configuration that I haven't added yet.
 	 */
 	private void storeData(Player player, BossBar shield) {
-		HashMap<String, Object> contents = new HashMap<String, Object>();
+		HashMap<String, BossBar> contents = new HashMap<String, BossBar>();
 		contents.put("playerShield", shield);
 		data.put(player.getUniqueId(), contents);
 	}
@@ -195,7 +190,7 @@ public class ShieldListener implements Listener {
 	 * cancelable shield regen.
 	 */
 	private void beginShieldRestore(Player player, BossBar playerShield) {
-		playerShield.setColor(healthyShieldColor);
+		playerShield.setColor(healthyShieldColor); //Throws NPE...
 		new BukkitRunnable() {
 
 			@Override
@@ -254,7 +249,7 @@ public class ShieldListener implements Listener {
 	 * Returns player's BossBar
 	 */
 	private BossBar getPlayerShield(Player player) {
-		return (BossBar) data.get(player.getUniqueId()).get("shieldMap");
+		return (BossBar) data.get(player.getUniqueId()).get("playerShield");
 	}
 
 	/*
