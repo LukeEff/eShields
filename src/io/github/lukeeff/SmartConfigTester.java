@@ -123,7 +123,6 @@ public class SmartConfigTester {
 		
 		typeChecker = objectFuncMap.get(configKey);
 		
-		//boolean correct = typeChecker.checkType(configObject);
 		boolean correct = check(configObject, typeChecker);
 		if (!correct) {
 			Bukkit.getConsoleSender()

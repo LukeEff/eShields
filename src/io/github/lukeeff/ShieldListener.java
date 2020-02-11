@@ -26,6 +26,8 @@ public class ShieldListener implements Listener {
 	static public double shieldRegenPerTick; // Regenerate shield %/tick.
 	static public String shieldName; // Name above BossBar that player sees.
 	static public double shieldHealth; // Gives the shield a value of 1/2 heart per health.
+	static private double shieldDamageReduction;
+	static private double trueDamage;
 	@SuppressWarnings("rawtypes")
 	static HashMap<UUID, HashMap> data; // Hashmap holding each player's BossBar.
 
@@ -44,6 +46,7 @@ public class ShieldListener implements Listener {
 		shieldName = configSectionGetString(plugin.shieldName);
 		shieldHealth = configSectionGetDouble(plugin.shieldHealth);
 		data = plugin.data;
+		shieldDamageReduction = 1000;
 	}
 	
 	static void reload() {
@@ -67,10 +70,9 @@ public class ShieldListener implements Listener {
 	// TODO Fix very rare bug where damage doesn't trigger health regen for some
 	// reason.
 	// TODO Give a way to spectate battles and see shield status of any player.
-	// TODO Keep functionality on reload.
 	// TODO Put long comments over line not to side.
-	// TODO Declare in outter wrapper, assign them in construcuter.
 	// TODO Brainstorm ideas for player-exclusive options.
+	// TODO clean up code.
 
 	/*	
 	 * Defines player object and BossBar for map key and value pair. BossBar is what
@@ -113,8 +115,8 @@ public class ShieldListener implements Listener {
 	@EventHandler
 	private void playerDamaged(EntityDamageEvent event) {
 		if (event.getEntity() instanceof Player) {
-			double shieldDamage = (event.getDamage() / 100); // Divide by 100 so player takes miniscule damage. Can't
-																// set to 0.
+			double shieldDamage = (event.getDamage() / shieldDamageReduction);
+			trueDamage = shieldDamage * shieldDamageReduction;
 			Player player = (Player) event.getEntity();
 			shieldProcessing(player, shieldDamage, event);
 
@@ -131,14 +133,8 @@ public class ShieldListener implements Listener {
 		beginShieldRestoreTimer(player, playerShield);
 		if (getShieldProgress(playerShield) > 0d) {
 			try {
-				setShieldProgress(playerShield, getShieldProgress(playerShield) - shieldDamage * (shieldHealth / 4)); // Divide    20 5 5
-																														// by
-																														// 4
-																														// so
-																														// shieldHealth
-																														// works
-																														// correctly.
-				event.setDamage(shieldDamage); // Sets player damage to 1% if shield is active.
+				setShieldProgress(playerShield, getShieldProgress(playerShield) - ((trueDamage/shieldHealth) + 0.0001));
+				event.setDamage(shieldDamage); // Sets player damage to a small% if shield is active.
 			} catch (Exception negativeShieldHealth) {
 				shieldFracture(player, shieldDamage, playerShield, event);
 			}
@@ -190,7 +186,7 @@ public class ShieldListener implements Listener {
 	 * cancelable shield regen.
 	 */
 	private void beginShieldRestore(Player player, BossBar playerShield) {
-		playerShield.setColor(healthyShieldColor); //Throws NPE...
+		playerShield.setColor(healthyShieldColor); 
 		new BukkitRunnable() {
 
 			@Override
