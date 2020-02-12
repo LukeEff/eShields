@@ -17,11 +17,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class eShields extends JavaPlugin {
 
-	// TODO field variables of all the defaults. Maybe make a map to hold key and
-	// value and use that as reference.
 	// TODO NMS implementation for shield regen visual, red vs blue team, etc
 	// (skins).
-	// TODO New class for config.
 
 	// This is for configuration reference
 	FileConfiguration config;
@@ -52,7 +49,7 @@ public class eShields extends JavaPlugin {
 	protected final HashMap<String, Sound> soundMap;
 	ShieldSounds sounds;
 	ShieldCooldown cooldown;
-	
+
 	@SuppressWarnings("rawtypes")
 	HashMap<UUID, HashMap> data;
 
@@ -60,19 +57,19 @@ public class eShields extends JavaPlugin {
 	public eShields() {
 		config = this.getConfig();
 		modifiedConfigFile = new File(this.getDataFolder(), "config.yml");
-		shieldHealth = new Object[] { "Shield health", (Double) 20.0 };
+		shieldHealth = new Object[] { "Shield health", 20.0d };
 		shieldName = new Object[] { "Shield name", "Shield Status" };
-		shieldRegenPerTick = new Object[] { "Shield percent regeneration per second", (Double) 20.0 };
+		shieldRegenPerTick = new Object[] { "Shield percent regeneration per second", 20.0d };
 		shieldStyle = new Object[] { "Shield Style", "SOLID" };
 		healthyShieldColor = new Object[] { "Active shield color", "BLUE" };
 		fracturedShieldColor = new Object[] { "Fractured shield color", "RED" };
-		DEFAULT_COOLDOWN = new Object[] { "Cooldown before shield regenerates", (Long) 5l };
+		DEFAULT_COOLDOWN = new Object[] { "Cooldown before shield regenerates", 5l };
 		shieldRegenSound = new Object[] { "Shield regeration sound", "BLOCK_BEACON_ACTIVATE" };
-		shieldRegenVolume = new Object[] { "Shield regeneration volume", (Float) 1f };
-		shieldRegenPitch = new Object[] { "Shield regeneration pitch", (Float) .4f };
+		shieldRegenVolume = new Object[] { "Shield regeneration volume", 1f };
+		shieldRegenPitch = new Object[] { "Shield regeneration pitch", .4f };
 		shieldFractureSound = new Object[] { "Shield fracture sound", "BLOCK_ANVIL_LAND" };
-		shieldFractureVolume = new Object[] { "Shield fracture volume", (Float) 1f };
-		shieldFracturePitch = new Object[] { "Shield fracture pitch", (Float) .4f };
+		shieldFractureVolume = new Object[] { "Shield fracture volume", 1f };
+		shieldFracturePitch = new Object[] { "Shield fracture pitch", .4f };
 		shieldListenerSection = new Object[] { "Shield Properties", shieldHealth, shieldName, shieldRegenPerTick,
 				shieldStyle, healthyShieldColor, fracturedShieldColor };
 		shieldSoundSection = new Object[] { "Sounds", shieldRegenSound, shieldRegenVolume, shieldRegenPitch,
@@ -88,15 +85,14 @@ public class eShields extends JavaPlugin {
 		sounds = new ShieldSounds(this);
 		cooldown = new ShieldCooldown(this);
 		data = new HashMap<UUID, HashMap>();
-		
-		
+
 	}
 
 	@Override
 	public void onEnable() {
 
 		loadConfig();
-		getServer().getPluginManager().registerEvents(new ShieldListener(this),this);
+		getServer().getPluginManager().registerEvents(new ShieldListener(this), this);
 		this.getCommand("eshields").setExecutor(new CommandExecute(this));
 		this.getCommand("ecategory").setExecutor(new CommandCategory(this, tester));
 	}
@@ -105,18 +101,31 @@ public class eShields extends JavaPlugin {
 	public void onDisable() {
 
 	}
-	/*
-	 * Check and set default config.
+
+	/**
+	 * 
+	 * reloadTest reloads the config of the eShields plugin by updating all of the
+	 * variables in the config.
+	 * <p>
+	 * It will run immedietly and by default does when eShields reload command is
+	 * executed.
 	 */
-	
 	public void reloadTest() {
 		this.loadConfig();
 		this.reloadConfig();
 		config = this.getConfig();
 		saveConfig();
 	}
-	
-	void loadConfig() {
+
+	/**
+	 * loadConfig will load a config from inside of the eShields folder config. It
+	 * checks if it exists and then puts each value through a tester and ensures
+	 * that the inputs will work. If they don't, it will try to save the config by
+	 * replacing default values, otherwise it will reset the config altogether.
+	 * <p>
+	 * This is run by default when eShields class is constructed or reloaded.
+	 */
+	public void loadConfig() {
 		try {
 			if (modifiedConfigFile.exists()) {
 				config.load(modifiedConfigFile);
@@ -135,9 +144,8 @@ public class eShields extends JavaPlugin {
 	/*
 	 * Default values for configuration file.
 	 */
-	void configDefaults() {
+	private void configDefaults() {
 
-		// TODO Comment to describe each value.
 		listenerDefaults();
 		soundDefaults();
 		cooldownDefaults();
@@ -146,29 +154,41 @@ public class eShields extends JavaPlugin {
 		saveConfig();
 
 	}
+
 	/*
 	 * Set default sound values.
 	 */
-	void soundDefaults() {
+	private void soundDefaults() {
 		config.createSection(getSoundSectionName());
 		addDefault(shieldSoundSection);
 	}
+
 	/*
 	 * Set default listener values.
 	 */
-	void listenerDefaults() {
+	private void listenerDefaults() {
 		config.createSection(getShieldListenerSectionName());
 		addDefault(shieldListenerSection);
 	}
+
 	/*
 	 * Set default cooldown values.
 	 */
-	void cooldownDefaults() {
+	private void cooldownDefaults() {
 		config.createSection(getCooldownSectionName());
 		addDefault(cooldownSection);
 	}
 
-	void addDefault(Object[] section) {
+	/**
+	 * Adds the default objects to the configuration section that are going to be
+	 * modifiable through the user config.
+	 * 
+	 * @param section is a list with a string for the name of the section and all
+	 *                other objects that are stored in that section.
+	 * 
+	 *                This could probably be optimized
+	 */
+	private void addDefault(Object[] section) {
 		String sectionName = (String) section[0];
 		boolean isFirst = true;
 		for (Object configValuePairs : section) {
@@ -189,59 +209,75 @@ public class eShields extends JavaPlugin {
 			}
 		}
 	}
-    /*
-     * Sets possible BarColor values that can be input in config.
-     */
+
+	/*
+	 * Sets possible BarColor values that can be input in config.
+	 */
 	protected final void shieldColorMapSetter() {
 		for (BarColor barColors : BarColor.values()) {
 			shieldColorMap.put(barColors.name(), barColors);
 		}
 	}
-    /*
-     * Sets possible Sound values that can be input in config.
-     */
+
+	/*
+	 * Sets possible Sound values that can be input in config.
+	 */
 	protected final void soundMapSetter() {
 		for (Sound sounds : Sound.values()) {
 			soundMap.put(sounds.name(), sounds);
 		}
 	}
-    /*
-     * Sets possible BarStyle values that can be input in config.
-     */
+
+	/*
+	 * Sets possible BarStyle values that can be input in config.
+	 */
 	protected final void shieldStyleMapSetter() {
 		for (BarStyle barStyles : BarStyle.values()) {
 			shieldStyleMap.put(barStyles.name(), barStyles);
 		}
-		
-		
-		
-		
-		 
-		
-		
+
 	}
-    /*
-     * Get section name in config.
-     */
-	protected final String getShieldListenerSectionName() {
+
+	/**
+	 * Gets the shield listener section name string.
+	 * 
+	 * @return The shield listener section name.
+	 */
+	public final String getShieldListenerSectionName() {
 		return (String) shieldListenerSection[0];
 	}
-    /*
-     * Get section name in config.
-     */
-	protected final String getSoundSectionName() {
+
+	/**
+	 * Gets the sound section name string.
+	 * 
+	 * @return The sound section name.
+	 */
+	public final String getSoundSectionName() {
 		return (String) shieldSoundSection[0];
 	}
-    /*
-     * Get section name in config.
-     */
-	protected final String getCooldownSectionName() {
+
+	/**
+	 * Gets the cooldown section name string.
+	 * 
+	 * @return The cooldown section name
+	 */
+	public final String getCooldownSectionName() {
 		return (String) cooldownSection[0];
 	}
-    /*
-     * Get section in config.
-     */
-	protected ConfigurationSection getSection(String section) {
+
+	/**
+	 * Returns a ConfigurationSection object that contains values used all
+	 * throughout the project. The section argument must specify the string of a
+	 * section in the top level of the configuration section.
+	 * <p>
+	 * This method will always return immediately, whether or not the
+	 * ConfigurationSection actually exists.
+	 * 
+	 * @param section the name of the section you want to access, relative to the
+	 *                top level of the config
+	 * @return the specified configuration section
+	 */
+	public ConfigurationSection getSection(String section) {
 		return config.getConfigurationSection(section);
 	}
 

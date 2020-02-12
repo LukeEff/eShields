@@ -15,10 +15,12 @@ public class CommandCategory implements CommandExecutor {
 	SmartConfigTester maps;
 	@SuppressWarnings("rawtypes")
 	private HashMap<String, HashMap> key;
+	
 	@SuppressWarnings("rawtypes")
 	public CommandCategory(eShields instance, SmartConfigTester instance0) {
 		plugin = instance;
 		maps = instance0;
+		
 		key = new HashMap<String, HashMap>();
 		key.put("soundcategory", plugin.soundMap);
 		key.put("barstylecategory", plugin.shieldStyleMap);
@@ -40,4 +42,7 @@ public class CommandCategory implements CommandExecutor {
 		return true;
 	}
 
+	
+	
+	
 }

@@ -26,7 +26,6 @@ public class ShieldListener implements Listener {
 	static public double shieldRegenPerTick; // Regenerate shield %/tick.
 	static public String shieldName; // Name above BossBar that player sees.
 	static public double shieldHealth; // Gives the shield a value of 1/2 heart per health.
-	static private double shieldDamageReduction;
 	static private double trueDamage;
 	@SuppressWarnings("rawtypes")
 	static HashMap<UUID, HashMap> data; // Hashmap holding each player's BossBar.
@@ -46,7 +45,6 @@ public class ShieldListener implements Listener {
 		shieldName = configSectionGetString(plugin.shieldName);
 		shieldHealth = configSectionGetDouble(plugin.shieldHealth);
 		data = plugin.data;
-		shieldDamageReduction = 1000;
 	}
 	
 	static void reload() {
@@ -74,13 +72,12 @@ public class ShieldListener implements Listener {
 	// TODO Brainstorm ideas for player-exclusive options.
 	// TODO clean up code.
 
+	
+	
 	/*	
 	 * Defines player object and BossBar for map key and value pair. BossBar is what
 	 * I used for the energy shield.
 	 */
-	
-	
-	
 	@EventHandler
 	private void onJoin(PlayerJoinEvent event) {
 		Player player = (Player) event.getPlayer();
@@ -89,8 +86,6 @@ public class ShieldListener implements Listener {
 		initializeShield(player, playerShield);
 
 	}
-
-	
 	
 	/*
 	 * This method is for future configuration that I haven't added yet.
@@ -114,9 +109,10 @@ public class ShieldListener implements Listener {
 	 */
 	@EventHandler
 	private void playerDamaged(EntityDamageEvent event) {
+		final double SHIELDDAMAGEREDUCTION = 1000;
 		if (event.getEntity() instanceof Player) {
-			double shieldDamage = (event.getDamage() / shieldDamageReduction);
-			trueDamage = shieldDamage * shieldDamageReduction;
+			double shieldDamage = (event.getDamage() / SHIELDDAMAGEREDUCTION);
+			trueDamage = shieldDamage * SHIELDDAMAGEREDUCTION;
 			Player player = (Player) event.getEntity();
 			shieldProcessing(player, shieldDamage, event);
 
@@ -134,7 +130,7 @@ public class ShieldListener implements Listener {
 		if (getShieldProgress(playerShield) > 0d) {
 			try {
 				setShieldProgress(playerShield, getShieldProgress(playerShield) - ((trueDamage/shieldHealth) + 0.0001));
-				event.setDamage(shieldDamage); // Sets player damage to a small% if shield is active.
+				event.setDamage(shieldDamage);
 			} catch (Exception negativeShieldHealth) {
 				shieldFracture(player, shieldDamage, playerShield, event);
 			}
@@ -299,10 +295,7 @@ public class ShieldListener implements Listener {
 	 * parameter.
 	 */
 	private static BarColor configSectionGetBarColor(Object[] configName) {
-		// return
-		// plugin.getConfig().getConfigurationSection(configSectionName()).getObject((String)
-		// configName[0],
-		// BarColor.class);
+
 		return plugin.shieldColorMap.get(plugin.getConfig().getConfigurationSection(configSectionName())
 				.getString((String) configName[0]).toUpperCase());
 	}
