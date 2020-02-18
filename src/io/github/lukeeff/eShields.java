@@ -56,7 +56,7 @@ public class eShields extends JavaPlugin {
 	@SuppressWarnings("rawtypes")
 	public eShields() {
 		config = this.getConfig();
-		modifiedConfigFile = new File(this.getDataFolder(), "config.yml");
+		
 		shieldHealth = new Object[] { "Shield health", 20.0d };
 		shieldName = new Object[] { "Shield name", "Shield Status" };
 		shieldRegenPerTick = new Object[] { "Shield percent regeneration per second", 20.0d };
@@ -81,6 +81,7 @@ public class eShields extends JavaPlugin {
 		shieldColorMapSetter();
 		soundMap = new HashMap<String, Sound>();
 		soundMapSetter();
+		loadConfig();
 		tester = new SmartConfigTester(this);
 		sounds = new ShieldSounds(this);
 		cooldown = new ShieldCooldown(this);
@@ -91,7 +92,7 @@ public class eShields extends JavaPlugin {
 	@Override
 	public void onEnable() {
 
-		loadConfig();
+		
 		getServer().getPluginManager().registerEvents(new ShieldListener(this), this);
 		this.getCommand("eshields").setExecutor(new CommandExecute(this));
 		this.getCommand("ecategory").setExecutor(new CommandCategory(this, tester));
@@ -127,6 +128,7 @@ public class eShields extends JavaPlugin {
 	 */
 	public void loadConfig() {
 		try {
+			modifiedConfigFile = new File(this.getDataFolder(), "config.yml");
 			if (modifiedConfigFile.exists()) {
 				config.load(modifiedConfigFile);
 				tester.checkConfig();
@@ -135,9 +137,9 @@ public class eShields extends JavaPlugin {
 			}
 			saveConfig();
 		} catch (IOException | InvalidConfigurationException e) {
-
+			
 			configDefaults();
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 

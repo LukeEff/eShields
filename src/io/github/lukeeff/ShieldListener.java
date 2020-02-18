@@ -65,12 +65,9 @@ public class ShieldListener implements Listener {
 		}
 		playerShield.setStyle(shieldStyle);
 	}
-	// TODO Fix very rare bug where damage doesn't trigger health regen for some
-	// reason.
+
 	// TODO Give a way to spectate battles and see shield status of any player.
-	// TODO Put long comments over line not to side.
 	// TODO Brainstorm ideas for player-exclusive options.
-	// TODO clean up code.
 
 	
 	

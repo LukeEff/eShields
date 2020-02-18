@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -29,7 +30,8 @@ public class CommandCategory implements CommandExecutor {
 	
 	@Override
 	public boolean onCommand(CommandSender arg0, Command arg1, String arg2, String[] inputName) {
-		if (inputName.length > 0) {
+		Player p = (Player) arg0;
+		if (inputName.length > 0 & p.hasPermission("ecategory")) {
 		if (!(key.get(inputName[0].toLowerCase()) == null)) {
 			Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + inputName[0] + " possible values: " + ChatColor.AQUA + key.get(inputName[0]).values().toString());
 			return true;
