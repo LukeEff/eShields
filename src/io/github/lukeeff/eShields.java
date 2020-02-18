@@ -81,8 +81,9 @@ public class eShields extends JavaPlugin {
 		shieldColorMapSetter();
 		soundMap = new HashMap<String, Sound>();
 		soundMapSetter();
-		loadConfig();
+		
 		tester = new SmartConfigTester(this);
+		loadConfig();
 		sounds = new ShieldSounds(this);
 		cooldown = new ShieldCooldown(this);
 		data = new HashMap<UUID, HashMap>();

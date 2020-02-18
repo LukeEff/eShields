@@ -127,13 +127,13 @@ public class SmartConfigTester {
 		if (!correct) {
 			Bukkit.getConsoleSender()
 			.sendMessage(ChatColor.DARK_RED + "Warning: " + ChatColor.YELLOW + "config object " + configKey
-					+ " with value: " + getSectionObject()
+					//+ " with value: " + getSectionObject()
 
 					+ " could not load correctly! Overwritten to default value, " + defaultObject + ". Please type "
 					+ ChatColor.AQUA + "/eCategory to see a list of possible inputs.");
 	setSectionObject();
 		} else {
-			Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Config object " + configKey + " with value: " + getSectionObject() + " successfully loaded.");
+			//Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Config object " + configKey + " with value: " + getSectionObject() + " successfully loaded.");
 		}
 	}
 	
